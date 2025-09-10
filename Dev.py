@@ -1,15 +1,23 @@
 import streamlit as st
 import pickle
 import pandas as pd
+import gdown
 
 # -------------------------------
-# Load Data
+# Download similarity.pkl from Google Drive using gdown
 # -------------------------------
-movies_dict = pickle.load(open('movie_dict.pkl', 'rb'))
+
+similarity_file_id = "1oiUnots4Ytd6igNrH2X6Cd4i6MhcgB7F"  # your Google Drive file ID
+gdown.download(f"https://drive.google.com/uc?id={similarity_file_id}", "similarity.pkl", quiet=False)
+
+# Load similarity.pkl
+with open("similarity.pkl", "rb") as f:
+    similarity = pickle.load(f)
+
+# Load movie_dict.pkl from GitHub (already uploaded)
+with open("movie_dict.pkl", "rb") as f:
+    movies_dict = pickle.load(f)
 movies = pd.DataFrame(movies_dict)
-
-# similarity matrix
-similarity = pickle.load(open('similarity.pkl', 'rb'))
 
 # -------------------------------
 # Recommend Function
@@ -30,7 +38,6 @@ st.set_page_config(page_title="AI Movie Recommender", page_icon="🍿", layout="
 # -------------------------------
 st.markdown("""
 <style>
-/* background + header */
 [data-testid="stAppViewContainer"] {
     background: linear-gradient(to right, #141e30, #243b55);
     color: white;
@@ -38,8 +45,6 @@ st.markdown("""
 [data-testid="stHeader"] {
     background: rgba(0,0,0,0);
 }
-
-/* floating text animation */
 @keyframes float {
   0%   { transform: translateY(0px); opacity: 1; }
   50%  { transform: translateY(-20px); opacity: 0.7; }
@@ -53,8 +58,6 @@ st.markdown("""
   color: #FFD700;
   animation: float 3s ease-in-out infinite;
 }
-
-/* button-as-card styling - this targets Streamlit buttons */
 div.stButton > button {
     background-color: #1e1e2f;
     color: white;
@@ -68,8 +71,6 @@ div.stButton > button {
     width: 100%;
     text-align: left;
 }
-
-/* Yellow hoverboard glow - using !important to override Streamlit styles */
 div.stButton > button:hover {
     transform: translateY(-4px) scale(1.03) !important;
     background: linear-gradient(90deg, #ffd54f 0%, #ff9800 100%) !important;
@@ -77,8 +78,6 @@ div.stButton > button:hover {
     box-shadow: 0 10px 30px rgba(255,152,0,0.45) !important;
     cursor: pointer;
 }
-
-/* slide-in animation for description */
 @keyframes slideIn {
   from {opacity: 0; transform: translateY(12px);}
   to {opacity: 1; transform: translateY(0);}
@@ -100,14 +99,14 @@ div.stButton > button:hover {
 # -------------------------------
 st.markdown("""
 <div style="text-align:center; margin-bottom:18px;">
-  <span class="movie-text">🎬 Inception</span>
-  <span class="movie-text" style="animation-delay:0.3s;">🍿 Titanic</span>
-  <span class="movie-text" style="animation-delay:0.6s;">🎥 Avatar</span>
-  <span class="movie-text" style="animation-delay:0.9s;">🌌 Interstellar</span>
-  <span class="movie-text" style="animation-delay:1.2s;">🦇 The Dark Knight</span>
-  <span class="movie-text" style="animation-delay:1.5s;">💡 The Matrix</span>
-  <span class="movie-text" style="animation-delay:1.8s;">⚡ Avengers</span>
-  <span class="movie-text" style="animation-delay:2.1s;">🧙‍♂ Harry Potter</span>
+<span class="movie-text">🎬 Inception</span>
+<span class="movie-text" style="animation-delay:0.3s;">🍿 Titanic</span>
+<span class="movie-text" style="animation-delay:0.6s;">🎥 Avatar</span>
+<span class="movie-text" style="animation-delay:0.9s;">🌌 Interstellar</span>
+<span class="movie-text" style="animation-delay:1.2s;">🦇 The Dark Knight</span>
+<span class="movie-text" style="animation-delay:1.5s;">💡 The Matrix</span>
+<span class="movie-text" style="animation-delay:1.8s;">⚡ Avengers</span>
+<span class="movie-text" style="animation-delay:2.1s;">🧙‍♂ Harry Potter</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -118,9 +117,8 @@ st.title("🍿 Dev Recommender 🎬")
 st.markdown("<div style='font-size:20px; color:yellow; margin-bottom:6px;'>✨ Find your next favorite movie instantly! ✨</div>", unsafe_allow_html=True)
 
 selected_movie_name = st.selectbox("🎥 Select a movie you like:", movies['title'].values)
-
-# show the selected movie details always
 selected_movie = movies[movies['title'] == selected_movie_name].iloc[0]
+
 st.markdown(f"""
 <div class="description-box">
   <h3>🎬 {selected_movie['title']}</h3>
@@ -135,7 +133,6 @@ st.markdown(f"""
 if st.button("Recommend 🚀"):
     recs = recommend_basic(selected_movie_name)
     st.session_state["recommendations"] = recs
-    # clear previous selections
     st.session_state.pop("selected_top", None)
     st.session_state.pop("selected_bottom", None)
 
@@ -144,11 +141,9 @@ if st.button("Recommend 🚀"):
 # -------------------------------
 if "recommendations" in st.session_state:
     recs = st.session_state["recommendations"]
-    # ensure length >=1
     if not recs:
         st.info("No recommendations found.")
     else:
-        # split into two halves (if less than 10 handle gracefully)
         top_recs = recs[:5]
         bottom_recs = recs[5:]
 
@@ -157,7 +152,6 @@ if "recommendations" in st.session_state:
 
         with col_left_top:
             st.markdown("<div class='small-note'>Click any movie to view its full description on the right.</div>", unsafe_allow_html=True)
-            # render buttons stacked, styled by CSS
             for idx, title in enumerate(top_recs):
                 key = f"top_{idx}"
                 if st.button(f"🎬 {title}", key=key):
