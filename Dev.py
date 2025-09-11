@@ -1,23 +1,27 @@
 import streamlit as st
 import pickle
 import pandas as pd
+import os
 import gdown
 
-# -------------------------------
-# Download similarity.pkl from Google Drive using gdown
-# -------------------------------
-
-similarity_file_id = "1oiUnots4Ytd6igNrH2X6Cd4i6MhcgB7F"  # your Google Drive file ID
-gdown.download(f"https://drive.google.com/uc?id={similarity_file_id}", "similarity.pkl", quiet=False)
-
-# Load similarity.pkl
-with open("similarity.pkl", "rb") as f:
-    similarity = pickle.load(f)
-
-# Load movie_dict.pkl from GitHub (already uploaded)
+# Load movie_dict.pkl (already in repo)
 with open("movie_dict.pkl", "rb") as f:
     movies_dict = pickle.load(f)
 movies = pd.DataFrame(movies_dict)
+
+# Download and load similarity.pkl from Google Drive
+similarity_file_id = "1oiUnots4Ytd6igNrH2X6Cd4i6MhcgB7F"
+similarity_path = "similarity.pkl"
+
+# Only download if not already present
+if not os.path.exists(similarity_path):
+    gdown.download(f"https://drive.google.com/uc?id={similarity_file_id}", similarity_path, quiet=False)
+
+# Load similarity matrix
+with open(similarity_path, "rb") as f:
+    similarity = pickle.load(f)
+
+
 
 # -------------------------------
 # Recommend Function
